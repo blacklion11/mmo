@@ -1,0 +1,3 @@
+SDL Initialized...
+Client connected
+SDL closed and quitted
