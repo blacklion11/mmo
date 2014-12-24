@@ -1,8 +1,4 @@
-#include <iostream>
-#include <stdio.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_net.h>
-#include <cstring>
+#include "core.h"
 
 #define DEFAULT_WINDOW_WIDTH 640
 #define DEFAULT_WINDOW_HEIGHT 480
@@ -13,7 +9,9 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 
 
+IPaddress ip;
 TCPsocket server;
+TCPsocket listener;
 TCPsocket client;
 
 void initSDL()
@@ -39,28 +37,69 @@ void initSDL()
 	cout << "SDL Initialized..." << endl;
 }
 
-void listen()
+void createServerSocket()
 {
-	
-	IPaddress ip;
-	SDLNet_ResolveHost(&ip,  NULL, 7777);  // NULL used when its a server.  Last parameter is the port number
+	SDLNet_ResolveHost(&ip,  NULL, 7777);   // IPaddress pointer for resolving, server IP address (NULL if this is a server), Port number
 	
 	server = SDLNet_TCP_Open(&ip);
+}
 
-	const char * text = "Hello Client!\n";
-	while(1)
+void listen()
+{
+	listener = SDLNet_TCP_Accept(server);
+	// if client is not null
+	if(listener)
 	{
-		client = SDLNet_TCP_Accept(server);
-		// if client is not null
-		if(client)
-		{
-			cout << "Client connected" << endl;
-			//SDLNet_TCP_Send(client,  text, strlen(text) + 1);
-			SDLNet_TCP_Close(client);
-			break;
-		}
+		client = listener;
+		listener = NULL;
 	}
 	
+}
+
+void run()
+{
+	//listen();
+	
+	//SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+	
+	bool running = true;
+	while(running)
+	{
+		//Listen for client connections
+		listen();
+		
+		//Listen for input from player
+		int input = getInput();
+		running = input != -1;
+		
+		if(input == 2)
+		{
+			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		}
+		
+		if(client)
+		{
+			SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+		}
+		else
+		{
+			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		}
+		
+		SDL_RenderClear(renderer);
+		SDL_RenderPresent(renderer);
+		
+	}
+	
+	
+	
+	
+}
+
+void closeConnections()
+{
+	SDLNet_TCP_Close(client);
+	SDLNet_TCP_Close(listener);
 }
 
 void closeSDL()
@@ -80,8 +119,10 @@ void closeSDL()
 int main(int argc, char** argv)
 {
 	initSDL();
-	listen();
+	createServerSocket();
+	run();
 	
+	closeConnections();
 	closeSDL();
 	return 0;
 }

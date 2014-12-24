@@ -1,8 +1,4 @@
-#include <iostream>
-#include <stdio.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_net.h>
-#include <cstring>
+#include "core.h"
 
 #define DEFAULT_WINDOW_WIDTH 640
 #define DEFAULT_WINDOW_HEIGHT 480
@@ -38,13 +34,19 @@ void initSDL()
 void connectToServer()
 {
 	IPaddress ip;
-	SDLNet_ResolveHost(&ip,  "127.0.0.1", 7777);  // NULL used when its a server.  Last parameter is the port number
+	SDLNet_ResolveHost(&ip,  "127.0.0.1", 7777);  // IPaddress pointer for resolving, server IP address (NULL if this is a server), Port number
 	
 	TCPsocket client = SDLNet_TCP_Open(&ip);
 	char text[100];
 	//SDLNet_TCP_Recv(client, text, 100);
 	
 	//cout << text;
+	bool running = true;
+	while(running)
+	{	
+		int input = getInput();
+		running = input != -1;
+	}
 	
 	SDLNet_TCP_Close(client);
 	
